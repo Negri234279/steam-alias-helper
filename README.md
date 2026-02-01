@@ -1,0 +1,117 @@
+# Steam Alias Helper
+
+![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+[![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-Instalar-brightgreen.svg)](https://chromewebstore.google.com/detail/hmiidlmocbplaidjjpamkjondliggadb)
+
+Una extensión de navegador que te permite gestionar una lista local de amigos de Steam por SteamID64 y actualizar sus alias/nicknames directamente desde la página de perfil de Steam Community, sin necesidad de usar la API de Steam.
+
+## 🎯 Características
+
+- ✅ Añadir amigos de Steam usando su SteamID64 y un alias personalizado
+- ✅ Actualizar el nickname de múltiples usuarios de Steam de forma masiva
+- ✅ Gestionar una lista local de alias con checkboxes para selección individual
+- ✅ Marcar usuarios como importantes con estrella
+- ✅ Exportar e importar listas de alias en formato JSON
+- ✅ Interfaz overlay directamente en las páginas de perfil de Steam
+- ✅ Contador de amigos en la lista
+- ✅ Sin necesidad de API Key de Steam
+
+## 📦 Instalación
+
+### Chrome Web Store (Recomendado)
+
+[![Instalar desde Chrome Web Store](https://storage.googleapis.com/web-dev-uploads/image/WlD8wC6g8khYWPJUsQceQkhXSlv1/iNEddTyWiMfLSwFD6qGq.png)](https://chromewebstore.google.com/detail/hmiidlmocbplaidjjpamkjondliggadb)
+
+Haz clic en el botón anterior o visita directamente: https://chromewebstore.google.com/detail/hmiidlmocbplaidjjpamkjondliggadb
+
+### Instalación Manual (Chrome / Edge / Brave)
+
+1. Descarga o clona este repositorio
+2. Abre tu navegador y navega a `chrome://extensions/` (o `edge://extensions/`)
+3. Activa el "Modo de desarrollador" en la esquina superior derecha
+4. Haz clic en "Cargar extensión sin empaquetar"
+5. Selecciona la carpeta `src` del proyecto
+
+### Firefox
+
+1. Descarga o clona este repositorio
+2. Abre Firefox y navega a `about:debugging#/runtime/this-firefox`
+3. Haz clic en "Cargar complemento temporal..."
+4. Selecciona el archivo `manifest.json` dentro de la carpeta `src`
+
+## 🚀 Uso
+
+### Añadir un amigo a la lista
+
+1. Haz clic en el icono de la extensión en la barra de herramientas
+2. Ingresa el SteamID64 del usuario (ejemplo: `76561198327583600`)
+3. Ingresa el alias que deseas asignarle
+4. Haz clic en "Añadir"
+
+### Actualizar nicknames en Steam
+
+1. Navega a cualquier página de perfil de Steam Community
+2. La extensión mostrará un overlay en la esquina inferior derecha
+3. Selecciona los amigos que deseas actualizar (o usa "Marcar todos")
+4. Haz clic en "Actualizar nicknames"
+5. La extensión actualizará automáticamente los nicknames de los usuarios seleccionados
+
+### Gestionar la lista
+
+- **Marcar/Desmarcar todos**: Selecciona o deselecciona todos los usuarios de la lista
+- **Marcar como importante**: Haz clic en la estrella junto a un usuario
+- **Eliminar usuario**: Haz clic en la X junto a un usuario
+- **Exportar lista**: Descarga tu lista de alias en formato JSON
+- **Importar lista**: Carga una lista previamente exportada
+
+## 🔧 Formato del JSON
+
+La lista de alias se almacena en el siguiente formato:
+
+```json
+[
+  {
+    "steamId": "76561198041183301",
+    "alias": "``Pelos",
+    "selected": true,
+  }
+]
+```
+
+- `steamId`: SteamID64 del usuario
+- `alias`: Nickname que se asignará
+- `selected`: Si está seleccionado para actualizar
+
+## 🛠️ Tecnologías
+
+- **Manifest V3**: Última versión del sistema de extensiones de navegador
+- **Vanilla JavaScript**: Sin frameworks, ligero y rápido
+- **Shadow DOM**: Para el overlay sin conflictos de estilos
+- **Chrome Storage API**: Almacenamiento local persistente
+
+## ⚠️ Limitaciones
+
+- Solo funciona en páginas de Steam Community
+- Requiere que estés autenticado en Steam
+- La actualización de nicknames utiliza manipulación del DOM, por lo que depende de la estructura actual de Steam Community
+- No utiliza la API oficial de Steam
+
+
+## 📝 Licencia
+
+Este proyecto está bajo la Licencia MIT. Consulta el archivo LICENSE para más detalles.
+
+## 👤 Autor
+
+**Negri234279**
+
+- GitHub: [@Negri234279](https://github.com/Negri234279)
+
+## 🐛 Reportar Problemas
+
+Si encuentras algún bug o tienes una sugerencia, por favor abre un [issue](https://github.com/Negri234279/steam-alias-helper/issues) en GitHub.
+
+---
+
+⭐ Si este proyecto te resultó útil, considera darle una estrella en GitHub

@@ -1,0 +1,27 @@
+{
+    "manifest_version": 3,
+    "name": "Steam Alias Helper",
+    "version": "1.0.1",
+    "description": "Gestiona una lista local de amigos por SteamID64 y ayuda a actualizar su alias/nickname en Steam usando DOM (sin API).",
+    "action": {
+        "default_title": "Steam Alias Helper",
+        "default_popup": "popup.html"
+    },
+    "permissions": ["storage", "tabs"],
+    "host_permissions": ["https://steamcommunity.com/*"],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": ["https://steamcommunity.com/*"],
+            "js": ["contentScript.js"],
+            "run_at": "document_idle"
+        }
+    ],
+    "icons": {
+        "16": "icons/icon16.png",
+        "48": "icons/icon48.png",
+        "128": "icons/icon128.png"
+    }
+}
