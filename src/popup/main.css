@@ -132,6 +132,10 @@ body {
     color: #ffd2d2;
 }
 
+.error {
+    color: #ffd2d2;
+}
+
 .hidden {
     display: none !important;
 }
