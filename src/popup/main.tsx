@@ -1,26 +1,41 @@
-import { render } from "preact"
+import { render } from 'preact'
+import { useState } from 'preact/hooks'
 
-import { useState } from "preact/hooks"
-import FormSteamId from "../components/FormSteamId"
+import AliasList from '../components/AliasList'
+import FormSteamId from '../components/FormSteamId'
+import { useSteamAliases } from '../hooks/useAliases'
+import { useFormSteamId } from '../hooks/useFormSteamId'
+import { ToastContainer, ToastProvider } from '../shared/toast'
+import type { Alias } from '../types/alias'
 import './main.css'
 
 const isDev = import.meta.env.DEV
 
 function App() {
-    const [showForm, setShowForm] = useState(false);
+    const [showForm, setShowForm] = useState(false)
 
-    const handleSubmit = (formValues: { steamId: string; alias: string }) => {
-        chrome.runtime.sendMessage({ type: 'LOG', from: 'popup', payload: formValues })
+    const formSteamId = useFormSteamId()
+    const { state, upsert, upsertAll, remove } = useSteamAliases({ autoLoad: true })
 
-        setShowForm(false);
-    };
+    const handleSubmit = async (formValues: { steamId: string; alias: string }) => {
+        await upsert(formValues)
+
+        setShowForm(false)
+    }
 
     const handleCancel = () => {
-        setShowForm(false);
+        setShowForm(false)
+    }
+
+    const handleShowEditAlias = async (alias: Alias) => {
+        formSteamId.setSteamId(alias.steamId)
+        formSteamId.setAlias(alias.alias)
+
+        setShowForm(true)
     }
 
     return (
-        <div>
+        <ToastProvider>
             <header className="header">
                 <div className="title">Steam Alias Helper {isDev && 'DEV'}</div>
                 <div className="sub">SteamID64 → Alias (nickname)</div>
@@ -32,11 +47,24 @@ function App() {
 
             {showForm && (
                 <section className="card" style={{ marginTop: '.5rem' }}>
-                    <FormSteamId onHandleSubmit={handleSubmit} onHandleCancel={handleCancel} />
+                    <FormSteamId
+                        useFormSteamId={formSteamId}
+                        onHandleSubmit={handleSubmit}
+                        onHandleCancel={handleCancel}
+                    />
                 </section>
             )}
-        </div>
+
+            <AliasList
+                aliases={state}
+                upsertAll={upsertAll}
+                onHandleShowEditAlias={handleShowEditAlias}
+                onRemove={remove}
+            />
+
+            <ToastContainer />
+        </ToastProvider>
     )
 }
 
-render(<App />, document.getElementById("app")!)
+render(<App />, document.getElementById('app')!)

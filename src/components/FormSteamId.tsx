@@ -1,13 +1,14 @@
-import { useFormSteamId } from '../hooks/useFormSteamId'
+import type { UseFormSteamIdReturn } from '../hooks/useFormSteamId'
 
 interface FormSteamIdProps {
+    useFormSteamId: UseFormSteamIdReturn
     onHandleSubmit: (formValues: { steamId: string; alias: string }) => void
     onHandleCancel: () => void
 }
 
-const FormSteamId = ({ onHandleSubmit, onHandleCancel }: FormSteamIdProps) => {
+const FormSteamId = ({ useFormSteamId, onHandleSubmit, onHandleCancel }: FormSteamIdProps) => {
     const { form, setSteamId, setAlias, blurSteamId, blurAlias, clearForm, handleSubmit } =
-        useFormSteamId()
+        useFormSteamId
 
     const handleInputChange = (setValue: (value: string) => void) => (ev: Event) => {
         setValue((ev.target as HTMLInputElement).value)
