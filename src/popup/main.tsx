@@ -2,10 +2,12 @@ import { render } from 'preact'
 import { useState } from 'preact/hooks'
 
 import AliasList from '../components/AliasList'
+import FormReplaceCharacter from '../components/FormReplaceCharacter'
 import FormSteamId from '../components/FormSteamId'
 import UpdateProgressDisplay from '../components/UpdateProgressDisplay'
 import { useSteamAliases } from '../hooks/useAliases'
 import { useFormSteamId } from '../hooks/useFormSteamId'
+import { useReplaceCharacter } from '../hooks/useReplaceCharacter'
 import { ToastContainer, ToastProvider } from '../shared/toast'
 import type { Alias } from '../types/alias'
 import './main.css'
@@ -14,9 +16,17 @@ const isDev = import.meta.env.DEV
 
 function App() {
     const [showForm, setShowForm] = useState(false)
+    const [selected, setSelected] = useState<Map<string, Alias>>(new Map())
 
     const formSteamId = useFormSteamId()
     const { state, upsert, upsertAll, remove } = useSteamAliases({ autoLoad: true })
+
+    const replaceCharacter = useReplaceCharacter({
+        aliases: state.data,
+        selectedSteamIds: new Set(selected.keys()),
+        upsertAll,
+        onSuccess: () => setSelected(new Map()),
+    })
 
     const handleSubmit = async (formValues: { steamId: string; alias: string }) => {
         await upsert(formValues)
@@ -56,6 +66,15 @@ function App() {
                 </section>
             )}
 
+            {replaceCharacter.showForm && (
+                <section className="card" style={{ marginTop: '.5rem' }}>
+                    <FormReplaceCharacter
+                        onHandleSubmit={replaceCharacter.replaceCharacter}
+                        onHandleCancel={replaceCharacter.closeForm}
+                    />
+                </section>
+            )}
+
             <UpdateProgressDisplay />
 
             <AliasList
@@ -63,6 +82,9 @@ function App() {
                 upsertAll={upsertAll}
                 onHandleShowEditAlias={handleShowEditAlias}
                 onRemove={remove}
+                onShowReplaceForm={replaceCharacter.openForm}
+                selected={selected}
+                setSelected={setSelected}
             />
         </>
     )

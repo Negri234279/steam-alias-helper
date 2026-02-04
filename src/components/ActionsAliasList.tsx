@@ -10,9 +10,10 @@ interface ActionsAliasListProps {
     selected: Map<string, Alias>
     setSelected: Dispatch<StateUpdater<Map<string, Alias>>>
     upsertAll: (payload: Alias[]) => Promise<void>
+    onShowReplaceForm: () => void
 }
 
-const ActionsAliasList = ({ aliases, selected, setSelected, upsertAll }: ActionsAliasListProps) => {
+const ActionsAliasList = ({ aliases, selected, setSelected, upsertAll, onShowReplaceForm }: ActionsAliasListProps) => {
     const { state: stateIO, exportAliases, importAliases } = useSteamAliasesIO()
     const { success, error: showError } = useToast()
 
@@ -146,6 +147,19 @@ const ActionsAliasList = ({ aliases, selected, setSelected, upsertAll }: Actions
                     onClick={handleUpdateAliasesSelected}
                 >
                     Actualizar seleccionados ({selectedCount})
+                </button>
+            )}
+
+            {!!selectedCount && (
+                <button
+                    id="replaceCharBtn"
+                    style={isDisabled ? 'pointer-events: none; cursor: default;' : undefined}
+                    class="btn"
+                    type="button"
+                    disabled={isDisabled}
+                    onClick={onShowReplaceForm}
+                >
+                    Reemplazar carácter
                 </button>
             )}
         </div>

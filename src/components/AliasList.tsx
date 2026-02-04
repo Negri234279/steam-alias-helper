@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'preact/hooks'
+import { useState, useMemo, type Dispatch, type StateUpdater } from 'preact/hooks'
 
 import type { AliasesState } from '../hooks/useAliases'
 import { useDebounce } from '../hooks/useDebounce'
@@ -12,10 +12,12 @@ interface AliasListProps {
     upsertAll: (payload: Alias[]) => Promise<void>
     onRemove: (steamId: string) => Promise<void>
     onHandleShowEditAlias: (alias: Alias) => Promise<void>
+    onShowReplaceForm: () => void
+    selected: Map<string, Alias>
+    setSelected: Dispatch<StateUpdater<Map<string, Alias>>>
 }
 
-const AliasList = ({ aliases, upsertAll, onHandleShowEditAlias, onRemove }: AliasListProps) => {
-    const [selected, setSelected] = useState<Map<string, Alias>>(new Map())
+const AliasList = ({ aliases, upsertAll, onHandleShowEditAlias, onRemove, onShowReplaceForm, selected, setSelected }: AliasListProps) => {
     const [searchTerm, setSearchTerm] = useState('')
     const debouncedSearch = useDebounce(searchTerm, 300)
 
@@ -102,6 +104,7 @@ const AliasList = ({ aliases, upsertAll, onHandleShowEditAlias, onRemove }: Alia
                 selected={selected}
                 setSelected={setSelected}
                 upsertAll={upsertAll}
+                onShowReplaceForm={onShowReplaceForm}
             />
 
             <NonFriendsList />
