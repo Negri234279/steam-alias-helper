@@ -35,7 +35,7 @@ function App() {
     }
 
     return (
-        <ToastProvider>
+        <>
             <header className="header">
                 <div className="title">Steam Alias Helper {isDev && 'DEV'}</div>
                 <div className="sub">SteamID64 → Alias (nickname)</div>
@@ -61,10 +61,14 @@ function App() {
                 onHandleShowEditAlias={handleShowEditAlias}
                 onRemove={remove}
             />
-
-            <ToastContainer />
-        </ToastProvider>
+        </>
     )
 }
 
-render(<App />, document.getElementById('app')!)
+render(
+    <ToastProvider>
+        <App />
+        <ToastContainer />
+    </ToastProvider>,
+    document.getElementById('app')!,
+)

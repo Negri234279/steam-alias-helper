@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "preact/hooks"
 
 import { sendSteamMessage } from "../shared/chrome"
+import { useToast } from "../shared/toast"
 import { STORAGE_KEY, type Alias } from "../types/alias"
 
 export type AliasesState = {
@@ -19,17 +20,23 @@ export function useSteamAliases(opts?: { autoLoad?: boolean; syncStorage?: boole
         error: null
     })
 
+    const { success, error: showError } = useToast()
+
     const refresh = useCallback(async () => {
         setState((p) => ({ ...p, loading: true, error: null }))
 
         try {
             const res = await sendSteamMessage({ type: "ALIASES_GET" })
 
-            if (res.ok) setState({ data: res.data ?? [], loading: false, error: null })
-            else setState({ data: [], loading: false, error: res.error })
+            if (!res.ok) {
+                throw new Error(res.error ?? "Unknown error")
+            }
+
+            setState({ data: res.data ?? [], loading: false, error: null })
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error)
             setState({ data: [], loading: false, error: message })
+            showError(`Error al cargar los alias: ${message}`)
         }
     }, [])
 
@@ -47,10 +54,11 @@ export function useSteamAliases(opts?: { autoLoad?: boolean; syncStorage?: boole
             }
 
             setState({ data: res.data, loading: false, error: null })
-
+            success('Alias guardado correctamente')
         } catch (e) {
             const message = e instanceof Error ? e.message : String(e)
             setState((p) => ({ ...p, loading: false, error: message }))
+            showError(`Error al guardar el alias: ${message}`)
         }
     }, [])
 
@@ -68,10 +76,11 @@ export function useSteamAliases(opts?: { autoLoad?: boolean; syncStorage?: boole
             }
 
             setState({ data: res.data, loading: false, error: null })
-
+            success('Alias guardados correctamente')
         } catch (e) {
             const message = e instanceof Error ? e.message : String(e)
             setState((p) => ({ ...p, loading: false, error: message }))
+            showError(`Error al guardar los alias: ${message}`)
         }
     }, [])
 
@@ -89,10 +98,11 @@ export function useSteamAliases(opts?: { autoLoad?: boolean; syncStorage?: boole
             }
 
             setState({ data: res.data, loading: false, error: null })
-
+            success('Alias eliminado correctamente')
         } catch (e) {
             const message = e instanceof Error ? e.message : String(e)
             setState((p) => ({ ...p, loading: false, error: message }))
+            showError(`Error al eliminar el alias: ${message}`)
         }
     }, [])
 
