@@ -2,18 +2,20 @@ import type { Alias } from '../types/alias'
 
 interface AliasListProps {
     alias: Alias
+    checked: boolean
+    onCheckedChange: (checked: boolean) => void
     onHandleShowEditAlias: (alias: Alias) => Promise<void>
     onRemove: (steamId: string) => Promise<void>
 }
 
-const AliasCardList = ({ alias, onHandleShowEditAlias, onRemove }: AliasListProps) => {
+const AliasCardList = ({ alias, checked, onCheckedChange, onHandleShowEditAlias, onRemove }: AliasListProps) => {
     const handleRemove = async () => {
         await onRemove(alias.steamId)
     }
 
     return (
         <div class="row">
-            <input type="checkbox" />
+            <input type="checkbox" checked={checked} onChange={(e) => onCheckedChange(e.currentTarget.checked)} />
             <div class="meta">
                 <div class="aliasLine">
                     <div class="alias" title="Click para editar alias" style="cursor: pointer;">

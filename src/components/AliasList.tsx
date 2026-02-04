@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from 'preact/hooks'
 import type { AliasesState } from '../hooks/useAliases'
 import { useSteamAliasesIO } from '../hooks/useSteamAliasesIO'
 import { useToast } from '../shared/toast'
@@ -12,10 +13,41 @@ interface AliasListProps {
 }
 
 const AliasList = ({ aliases, upsertAll, onHandleShowEditAlias, onRemove }: AliasListProps) => {
+    const [selected, setSelected] = useState<Set<string>>(new Set())
+
     const { state: stateIO, exportAliases, importAliases } = useSteamAliasesIO()
     const { success } = useToast()
 
+    const allIds = useMemo(() => aliases.data.map((a) => a.steamId), [aliases.data])
+
     const isDisabled = aliases.loading || stateIO.loading
+    const selectedCount = selected.size
+
+    useEffect(() => {
+        setSelected((prev) => {
+            const next = new Set<string>()
+            const valid = new Set(allIds)
+            for (const id of prev) if (valid.has(id)) next.add(id)
+            return next
+        })
+    }, [allIds])
+
+    const toggleOne = (steamId: string, checked: boolean) => {
+        setSelected((prev) => {
+            const next = new Set(prev)
+            if (checked) next.add(steamId)
+            else next.delete(steamId)
+            return next
+        })
+    }
+
+    const markAll = () => {
+        setSelected(new Set(allIds))
+    }
+
+    const unmarkAll = () => {
+        setSelected(new Set())
+    }
 
     const handleClickExport = async () => {
         await exportAliases()
@@ -33,6 +65,10 @@ const AliasList = ({ aliases, upsertAll, onHandleShowEditAlias, onRemove }: Alia
         input.value = ''
 
         success('Importación completada')
+    }
+
+    const handleUpdateAliasesSelected = async () => {
+        alert('Not implemented yet')
     }
 
     return (
@@ -56,6 +92,8 @@ const AliasList = ({ aliases, upsertAll, onHandleShowEditAlias, onRemove }: Alia
                         <AliasCardList
                             key={alias.steamId}
                             alias={alias}
+                            checked={selected.has(alias.steamId)}
+                            onCheckedChange={(checked) => toggleOne(alias.steamId, checked)}
                             onHandleShowEditAlias={onHandleShowEditAlias}
                             onRemove={onRemove}
                         />
@@ -65,13 +103,27 @@ const AliasList = ({ aliases, upsertAll, onHandleShowEditAlias, onRemove }: Alia
 
             <div class="actions">
                 {!!aliases.data.length && (
-                    <button id="markAllBtn" class="btn" type="button" disabled={isDisabled}>
+                    <button
+                        id="markAllBtn"
+                        style={isDisabled ? 'pointer-events: none; cursor: default;' : undefined}
+                        class="btn"
+                        type="button"
+                        disabled={isDisabled}
+                        onClick={markAll}
+                    >
                         Marcar todos
                     </button>
                 )}
 
                 {!!aliases.data.length && (
-                    <button id="unmarkAllBtn" class="btn" type="button" disabled={isDisabled}>
+                    <button
+                        id="unmarkAllBtn"
+                        style={isDisabled ? 'pointer-events: none; cursor: default;' : undefined}
+                        class="btn"
+                        type="button"
+                        disabled={isDisabled}
+                        onClick={unmarkAll}
+                    >
                         Desmarcar todos
                     </button>
                 )}
@@ -79,6 +131,7 @@ const AliasList = ({ aliases, upsertAll, onHandleShowEditAlias, onRemove }: Alia
                 {!!aliases.data.length && (
                     <button
                         id="exportBtn"
+                        style={isDisabled ? 'pointer-events: none; cursor: default;' : undefined}
                         class="btn"
                         type="button"
                         onClick={handleClickExport}
@@ -103,11 +156,17 @@ const AliasList = ({ aliases, upsertAll, onHandleShowEditAlias, onRemove }: Alia
                 {!!aliases.data.length && (
                     <button
                         id="updateSelectedBtn"
+                        style={
+                            isDisabled || !selectedCount
+                                ? 'pointer-events: none; cursor: default;'
+                                : undefined
+                        }
                         class="btn primary"
                         type="button"
-                        disabled={isDisabled}
+                        disabled={isDisabled || !selectedCount}
+                        onClick={handleUpdateAliasesSelected}
                     >
-                        Actualizar seleccionados
+                        Actualizar seleccionados ({selectedCount})
                     </button>
                 )}
             </div>
