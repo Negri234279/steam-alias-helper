@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'preact/hooks'
+
 import type { Alias } from '../types/alias'
 
 const STORAGE_KEY = 'lastRunNonFriends'
 
-export function useNonFriends() {
+export const useNonFriends = () => {
     const [nonFriends, setNonFriends] = useState<Alias[]>([])
     const [loading, setLoading] = useState(true)
 

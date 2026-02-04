@@ -3,6 +3,7 @@ import { useState } from 'preact/hooks'
 
 import AliasList from '../components/AliasList'
 import FormSteamId from '../components/FormSteamId'
+import UpdateProgressDisplay from '../components/UpdateProgressDisplay'
 import { useSteamAliases } from '../hooks/useAliases'
 import { useFormSteamId } from '../hooks/useFormSteamId'
 import { ToastContainer, ToastProvider } from '../shared/toast'
@@ -54,6 +55,8 @@ function App() {
                     />
                 </section>
             )}
+
+            <UpdateProgressDisplay />
 
             <AliasList
                 aliases={state}
