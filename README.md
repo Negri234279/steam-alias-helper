@@ -62,6 +62,11 @@ Haz clic en el botón anterior o visita directamente: https://chromewebstore.goo
 4. Haz clic en "Actualizar nicknames"
 5. La extensión actualizará automáticamente los nicknames de los usuarios seleccionados
 
+**⚠️ Detección de no amigos:**
+- Si intentas actualizar el alias de un usuario que **no está en tu lista de amigos de Steam**, la extensión lo detectará automáticamente
+- Aparecerá un cuadro de advertencia en el popup mostrando los usuarios que no son tus amigos
+- Esto te permite identificar rápidamente qué cuentas necesitas añadir como amigos primero
+
 ### Gestionar la lista
 
 - **Buscar**: Filtra la lista por alias o SteamID en tiempo real
