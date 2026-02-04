@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'preact/hooks'
+import { useCallback, useEffect, useState } from 'preact/hooks'
 import type { Alias } from '../types/alias'
 
 const STORAGE_KEY = 'lastRunNonFriends'
@@ -26,5 +26,14 @@ export function useNonFriends() {
         return () => chrome.storage.onChanged.removeListener(listener)
     }, [])
 
-    return { nonFriends, loading }
+    const removeOne = useCallback((steamId: string) => {
+        const updated = nonFriends.filter(alias => alias.steamId !== steamId)
+        chrome.storage.local.set({ [STORAGE_KEY]: updated })
+    }, [nonFriends])
+
+    const clearAll = useCallback(() => {
+        chrome.storage.local.set({ [STORAGE_KEY]: [] })
+    }, [])
+
+    return { nonFriends, loading, removeOne, clearAll }
 }
