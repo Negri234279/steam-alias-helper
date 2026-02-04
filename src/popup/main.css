@@ -162,6 +162,54 @@ body {
     margin-bottom: 8px;
 }
 
+.searchBox {
+    position: relative;
+    margin-bottom: 8px;
+}
+
+.searchInput {
+    width: 100%;
+    height: 32px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: #0b0e14;
+    color: var(--text);
+    padding: 0 32px 0 10px;
+    outline: none;
+}
+
+.searchInput:focus {
+    border-color: rgba(59, 130, 246, 0.7);
+}
+
+.searchInput::placeholder {
+    color: var(--muted);
+}
+
+.clearBtn {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    padding: 0;
+}
+
+.clearBtn:hover {
+    background: rgba(154, 164, 178, 0.1);
+    color: var(--text);
+}
+
 .listTitle {
     font-weight: 700;
 }
