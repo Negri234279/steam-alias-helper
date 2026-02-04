@@ -13,40 +13,42 @@ interface AliasListProps {
 }
 
 const AliasList = ({ aliases, upsertAll, onHandleShowEditAlias, onRemove }: AliasListProps) => {
-    const [selected, setSelected] = useState<Set<string>>(new Set())
+    const [selected, setSelected] = useState<Map<string, Alias>>(new Map())
 
     const { state: stateIO, exportAliases, importAliases } = useSteamAliasesIO()
-    const { success } = useToast()
-
-    const allIds = useMemo(() => aliases.data.map((a) => a.steamId), [aliases.data])
+    const { success, error: showError } = useToast()
 
     const isDisabled = aliases.loading || stateIO.loading
     const selectedCount = selected.size
 
     useEffect(() => {
         setSelected((prev) => {
-            const next = new Set<string>()
-            const valid = new Set(allIds)
-            for (const id of prev) if (valid.has(id)) next.add(id)
+            const next = new Map<string, Alias>()
+            const valid = new Map(aliases.data.map((a) => [a.steamId, a]))
+
+            for (const [id, _alias] of prev) {
+                if (valid.has(id)) next.set(id, valid.get(id)!)
+            }
+
             return next
         })
-    }, [allIds])
+    }, [aliases.data])
 
-    const toggleOne = (steamId: string, checked: boolean) => {
+    const toggleOne = (alias: Alias, checked: boolean) => {
         setSelected((prev) => {
-            const next = new Set(prev)
-            if (checked) next.add(steamId)
-            else next.delete(steamId)
+            const next = new Map(prev)
+            if (checked) next.set(alias.steamId, alias)
+            else next.delete(alias.steamId)
             return next
         })
     }
 
     const markAll = () => {
-        setSelected(new Set(allIds))
+        setSelected(new Map(aliases.data.map((alias) => [alias.steamId, alias])))
     }
 
     const unmarkAll = () => {
-        setSelected(new Set())
+        setSelected(new Map())
     }
 
     const handleClickExport = async () => {
@@ -68,7 +70,25 @@ const AliasList = ({ aliases, upsertAll, onHandleShowEditAlias, onRemove }: Alia
     }
 
     const handleUpdateAliasesSelected = async () => {
-        alert('Not implemented yet')
+        try {
+            const aliasesToUpdate = Array.from(selected.values())
+
+            const resp = await chrome.runtime.sendMessage({
+                type: 'START_UPDATE',
+                payload: {
+                    items: aliasesToUpdate,
+                },
+            })
+
+            if (!resp.ok) {
+                showError(`Error al iniciar actualización: ${resp.error || 'desconocido'}`)
+            } else {
+                success('Actualización iniciada')
+            }
+        } catch (error) {
+            const msg = error instanceof Error ? error.message : String(error)
+            showError(`Error al iniciar actualización: ${msg}`)
+        }
     }
 
     return (
@@ -93,7 +113,7 @@ const AliasList = ({ aliases, upsertAll, onHandleShowEditAlias, onRemove }: Alia
                             key={alias.steamId}
                             alias={alias}
                             checked={selected.has(alias.steamId)}
-                            onCheckedChange={(checked) => toggleOne(alias.steamId, checked)}
+                            onCheckedChange={(checked) => toggleOne(alias, checked)}
                             onHandleShowEditAlias={onHandleShowEditAlias}
                             onRemove={onRemove}
                         />
