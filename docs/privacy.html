@@ -1,63 +1,159 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>Política de Privacidad - Steam Alias Helper</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body {
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: #0f1115;
-      color: #e6edf3;
-      padding: 32px;
-      line-height: 1.6;
-    }
-    h1 {
-      font-size: 24px;
-      margin-bottom: 16px;
-    }
-    h2 {
-      font-size: 18px;
-      margin-top: 24px;
-    }
-    p {
-      max-width: 800px;
-    }
-  </style>
-</head>
-<body>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="description" content="Política de Privacidad - Steam Alias Helper" />
+        <title>Política de Privacidad - Steam Alias Helper</title>
+        <link rel="stylesheet" href="styles.css" />
+        <style>
+            .privacy-content {
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 4rem 2rem;
+            }
+            .privacy-content h1 {
+                font-size: 2.5rem;
+                font-weight: 700;
+                margin-bottom: 2rem;
+                color: var(--text-primary);
+            }
+            .privacy-content h2 {
+                font-size: 1.5rem;
+                font-weight: 600;
+                margin-top: 2.5rem;
+                margin-bottom: 1rem;
+                color: var(--text-primary);
+            }
+            .privacy-content p {
+                margin-bottom: 1.5rem;
+                color: var(--text-secondary);
+                font-size: 1rem;
+            }
+            .privacy-content code {
+                background-color: var(--surface);
+                padding: 0.2rem 0.5rem;
+                border-radius: 0.25rem;
+                font-family: 'Courier New', monospace;
+                font-size: 0.9rem;
+                color: var(--primary-color);
+            }
+            .privacy-content strong {
+                color: var(--text-primary);
+                font-weight: 600;
+            }
+            .privacy-section {
+                background-color: var(--surface);
+                padding: 2rem;
+                border-radius: 1rem;
+                border: 1px solid var(--border);
+                margin-bottom: 1.5rem;
+            }
+            .privacy-section:last-child {
+                margin-bottom: 0;
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <nav>
+                <div class="nav-container">
+                    <div class="logo">
+                        <h1>Steam Alias Helper</h1>
+                    </div>
+                    <div class="nav-links">
+                        <a href="index.html">Inicio</a>
+                        <a
+                            href="https://github.com/Negri234279/steam-alias-helper"
+                            target="_blank"
+                            rel="noopener"
+                            >GitHub</a
+                        >
+                        <a
+                            href="https://chromewebstore.google.com/detail/hmiidlmocbplaidjjpamkjondliggadb"
+                            target="_blank"
+                            rel="noopener"
+                            class="cta-button"
+                            >Instalar</a
+                        >
+                    </div>
+                </div>
+            </nav>
+        </header>
 
-<h1>Política de Privacidad – Steam Alias Helper</h1>
+        <main>
+            <div class="privacy-content">
+                <h1>Política de Privacidad</h1>
 
-<p>
-Steam Alias Helper no recopila, transmite ni vende datos personales del usuario.
-</p>
+                <p>
+                    Steam Alias Helper no recopila, transmite ni vende datos personales del usuario.
+                </p>
 
-<p>
-Todos los datos utilizados por la extensión (SteamID64, alias personalizados y preferencias de selección)
-se almacenan exclusivamente de forma local en el navegador del usuario mediante <code>chrome.storage.local</code>.
-</p>
+                <p>
+                    Todos los datos utilizados por la extensión (SteamID64, alias personalizados y
+                    preferencias de selección) se almacenan exclusivamente de forma local en el
+                    navegador del usuario mediante <code>chrome.storage.local</code>.
+                </p>
 
-<p>
-La extensión no envía información a servidores externos, no utiliza servicios de análisis,
-no rastrea la navegación del usuario y no accede al historial de navegación.
-</p>
+                <p>
+                    La extensión no envía información a servidores externos, no utiliza servicios de
+                    análisis, no rastrea la navegación del usuario y no accede al historial de
+                    navegación.
+                </p>
 
-<p>
-La extensión solo interactúa con el sitio <strong>steamcommunity.com</strong> para guiar al usuario
-en la actualización manual de alias de amigos a través de la interfaz web de Steam.
-</p>
+                <p>
+                    La extensión solo interactúa con el sitio
+                    <strong>steamcommunity.com</strong> para guiar al usuario en la actualización
+                    manual de alias de amigos a través de la interfaz web de Steam.
+                </p>
 
-<p>
-No se recopilan datos sensibles como credenciales, información personal, datos financieros
-ni información de localización.
-</p>
+                <p>
+                    No se recopilan datos sensibles como credenciales, información personal, datos
+                    financieros ni información de localización.
+                </p>
 
-<h2>Contacto</h2>
-<p>
-Si tienes preguntas sobre esta política de privacidad, puedes contactar con el desarrollador
-a través de la página de la extensión en Chrome Web Store.
-</p>
+                <h2>Contacto</h2>
+                <p>
+                    Si tienes preguntas sobre esta política de privacidad, puedes contactar con el
+                    desarrollador a través de la
+                    <a
+                        href="https://chromewebstore.google.com/detail/hmiidlmocbplaidjjpamkjondliggadb"
+                        target="_blank"
+                        rel="noopener"
+                        style="color: var(--primary-color); text-decoration: none"
+                        >página de la extensión en Chrome Web Store</a
+                    >
+                    o en nuestro repositorio de
+                    <a
+                        href="https://github.com/Negri234279/steam-alias-helper"
+                        target="_blank"
+                        rel="noopener"
+                        style="color: var(--primary-color); text-decoration: none"
+                        >GitHub</a
+                    >.
+                </p>
+            </div>
+        </main>
 
-</body>
+        <footer>
+            <div class="footer-content">
+                <p>&copy; 2026 Steam Alias Helper. Licencia MIT.</p>
+                <div class="footer-links">
+                    <a href="index.html">Inicio</a>
+                    <a
+                        href="https://github.com/Negri234279/steam-alias-helper"
+                        target="_blank"
+                        rel="noopener"
+                        >GitHub</a
+                    >
+                    <a
+                        href="https://github.com/Negri234279/steam-alias-helper/issues"
+                        target="_blank"
+                        rel="noopener"
+                        >Reportar un Bug</a
+                    >
+                </div>
+            </div>
+        </footer>
+    </body>
 </html>
