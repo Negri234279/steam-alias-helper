@@ -30,18 +30,25 @@ const FormSteamId = ({ useFormSteamId, onHandleSubmit, onHandleCancel }: FormSte
     return (
         <form className="addForm" onSubmit={onFormSubmit}>
             <div className="field">
-                <label htmlFor="steamIdInput">SteamID64</label>
+                <label htmlFor="steamIdInput">SteamID64 o Vanity URL</label>
                 <input
                     id="steamIdInput"
                     type="text"
                     autoComplete="off"
-                    placeholder="76561198327583600"
+                    placeholder="76561198327583600 o Noname"
                     value={form.steamId.value}
                     onChange={handleInputChange(setSteamId)}
                     onBlur={blurSteamId}
                     aria-invalid={!!form.steamId.error}
                     aria-describedby={form.steamId.error ? 'steamIdError' : undefined}
+                    disabled={form.steamId.resolving}
                 />
+
+                {form.steamId.resolving && (
+                    <div style={{ color: '#4a9eff', marginTop: '0.25rem', fontSize: '0.875rem' }}>
+                        Resolviendo vanity URL...
+                    </div>
+                )}
 
                 {form.steamId.touched && form.steamId.error && (
                     <div id="steamIdError" className="error">
@@ -67,7 +74,12 @@ const FormSteamId = ({ useFormSteamId, onHandleSubmit, onHandleCancel }: FormSte
             </div>
 
             <div style={{ display: 'flex', gap: '1rem' }}>
-                <button className="btn primary" style={{ width: '100%' }} type="submit">
+                <button 
+                    className="btn primary" 
+                    style={{ width: '100%' }} 
+                    type="submit"
+                    disabled={form.steamId.resolving}
+                >
                     Añadir
                 </button>
                 <button
@@ -75,6 +87,7 @@ const FormSteamId = ({ useFormSteamId, onHandleSubmit, onHandleCancel }: FormSte
                     style={{ width: '100%' }}
                     type="button"
                     onClick={handleCancel}
+                    disabled={form.steamId.resolving}
                 >
                     Cancelar
                 </button>

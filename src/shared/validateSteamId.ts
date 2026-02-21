@@ -18,11 +18,7 @@ export function validateSteamId(rawValue: string): string | null {
 
     const steamIdRegex = /^7656119\d{10}$/
     if (!steamIdRegex.test(steamId)) {
-        return "SteamID64 inválido o URL no válida (solo /profiles/)"
-    }
-
-    if (/steamcommunity\.com\/id\//.test(rawValue)) {
-        return "Las URLs con /id/ (vanity) no están soportadas"
+        return "SteamID64 inválido o URL no válida"
     }
 
     return null
