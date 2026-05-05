@@ -35,7 +35,7 @@ export class BulkAliasUpdateService {
         progressReporter: IProgressReporter,
         delayProvider: IDelayProvider,
         runIdGenerator: IRunIdGenerator,
-        config: BulkUpdateConfig = DEFAULT_CONFIG
+        config: BulkUpdateConfig = DEFAULT_CONFIG,
     ) {
         this.tabManager = tabManager
         this.aliasUpdater = aliasUpdater
@@ -60,6 +60,7 @@ export class BulkAliasUpdateService {
             done: 0,
             tabId: null,
             nonFriends: [],
+            friendRequestsSent: [],
         }
 
         const progress: UpdateProgress = {
@@ -68,20 +69,20 @@ export class BulkAliasUpdateService {
             statusLine: 'Iniciado.',
         }
 
-        this.executeUpdateQueue(runId)
-            .catch((error) => {
-                const msg = error instanceof Error ? error.message : String(error)
+        this.executeUpdateQueue(runId).catch((error) => {
+            const msg = error instanceof Error ? error.message : String(error)
 
-                this.reportProgress({
-                    done: this.currentRun?.done ?? 0,
-                    total: this.currentRun?.total ?? 0,
-                    statusLine: `❌ Error interno: ${msg}`,
-                    finished: true,
-                    nonFriends: this.currentRun?.nonFriends ?? [],
-                })
-
-                this.currentRun = null
+            this.reportProgress({
+                done: this.currentRun?.done ?? 0,
+                total: this.currentRun?.total ?? 0,
+                statusLine: `❌ Error interno: ${msg}`,
+                finished: true,
+                nonFriends: this.currentRun?.nonFriends ?? [],
+                friendRequestsSent: this.currentRun?.friendRequestsSent ?? [],
             })
+
+            this.currentRun = null
+        })
 
         return { runId, progress }
     }
@@ -170,7 +171,7 @@ export class BulkAliasUpdateService {
             item.steamId,
             item.alias,
             this.currentRun!.runId,
-            this.config.requestTimeout
+            this.config.requestTimeout,
         )
 
         this.handleUpdateResponse(response, item, index)
@@ -184,12 +185,23 @@ export class BulkAliasUpdateService {
                 statusLine: `✅ Actualizado: ${item.alias}`,
             })
         } else if (response?.code === 'NOT_FRIEND') {
-            this.currentRun!.nonFriends.push({ steamId: item.steamId, alias: item.alias })
-            
+            if (response?.friendRequestSent) {
+                this.currentRun!.friendRequestsSent.push({
+                    steamId: item.steamId,
+                    alias: item.alias,
+                })
+            } else {
+                this.currentRun!.nonFriends.push({ steamId: item.steamId, alias: item.alias })
+            }
+
+            const statusLine = response?.friendRequestSent
+                ? `📤 Solicitud de amistad enviada: ${item.alias} (${item.steamId})`
+                : `🚫 No es tu amigo: ${item.alias} (${item.steamId})`
+
             this.reportProgress({
                 done: index,
                 total: this.currentRun!.total,
-                statusLine: `🚫 No es tu amigo: ${item.alias} (${item.steamId})`,
+                statusLine,
             })
         } else {
             this.reportProgress({
@@ -233,6 +245,11 @@ export class BulkAliasUpdateService {
             chrome.storage.local.set({ lastRunNonFriends: nonFriends })
         }
 
+        const friendRequestsSent = this.currentRun.friendRequestsSent
+        if (friendRequestsSent.length > 0) {
+            this.persistFriendRequestsSent(friendRequestsSent)
+        }
+
         const statusLine = wasCancelled ? 'Actualización cancelada.' : 'Actualización completada.'
 
         this.reportProgress({
@@ -241,9 +258,27 @@ export class BulkAliasUpdateService {
             statusLine,
             finished: true,
             nonFriends,
+            friendRequestsSent,
         })
 
         this.currentRun = null
+    }
+
+    private persistFriendRequestsSent(newEntries: Alias[]): void {
+        chrome.storage.local.get({ lastRunFriendRequestsSent: [] as Alias[] }, (result) => {
+            const existing = (result.lastRunFriendRequestsSent as Alias[]) || []
+            const bySteamId = new Map<string, Alias>()
+
+            for (const entry of existing) {
+                bySteamId.set(entry.steamId, entry)
+            }
+
+            for (const entry of newEntries) {
+                bySteamId.set(entry.steamId, entry)
+            }
+
+            chrome.storage.local.set({ lastRunFriendRequestsSent: Array.from(bySteamId.values()) })
+        })
     }
 
     private reportProgress(progress: UpdateProgress): void {

@@ -5,6 +5,7 @@ import { useDebounce } from '../hooks/useDebounce'
 import type { Alias } from '../types/alias'
 import ActionsAliasList from './ActionsAliasList'
 import AliasCardList from './AliasCardList'
+import FriendRequestsSentList from './FriendRequestsSentList'
 import NonFriendsList from './NonFriendsList'
 
 interface AliasListProps {
@@ -17,7 +18,15 @@ interface AliasListProps {
     setSelected: Dispatch<StateUpdater<Map<string, Alias>>>
 }
 
-const AliasList = ({ aliases, upsertAll, onHandleShowEditAlias, onRemove, onShowReplaceForm, selected, setSelected }: AliasListProps) => {
+const AliasList = ({
+    aliases,
+    upsertAll,
+    onHandleShowEditAlias,
+    onRemove,
+    onShowReplaceForm,
+    selected,
+    setSelected,
+}: AliasListProps) => {
     const [searchTerm, setSearchTerm] = useState('')
     const debouncedSearch = useDebounce(searchTerm, 300)
 
@@ -108,6 +117,8 @@ const AliasList = ({ aliases, upsertAll, onHandleShowEditAlias, onRemove, onShow
             />
 
             <NonFriendsList />
+
+            <FriendRequestsSentList />
 
             <div class="footnote">
                 Tip: abre sesión en Steam en el navegador. El overlay aparecerá en perfiles de

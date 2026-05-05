@@ -7,6 +7,7 @@ export interface UpdateProgress {
     currentLabel?: string
     finished?: boolean
     nonFriends?: Alias[]
+    friendRequestsSent?: Alias[]
 }
 
 export interface UpdateRun {
@@ -17,10 +18,12 @@ export interface UpdateRun {
     done: number
     tabId: number | null
     nonFriends: Alias[]
+    friendRequestsSent: Alias[]
 }
 
 export interface SetAliasResult {
     ok: boolean
     error?: string
     code?: string
+    friendRequestSent?: boolean
 }

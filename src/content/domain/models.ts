@@ -9,6 +9,7 @@ export interface SetAliasResponse {
     code?: string
     skipped?: boolean
     message?: string
+    friendRequestSent?: boolean
 }
 
 export enum ProfileState {
