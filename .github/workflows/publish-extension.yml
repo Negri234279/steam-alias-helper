@@ -1,4 +1,4 @@
-name: Create Release
+name: Create Release and Publish Chrome Extension
 
 on:
   workflow_dispatch:
@@ -33,6 +33,19 @@ jobs:
       - name: Build extension
         run: npm run build
 
+      - name: Validate built manifest version
+        run: |
+          BUILT_VERSION=$(jq -r '.version' dist/manifest.json)
+          SOURCE_VERSION="${{ steps.version.outputs.VERSION }}"
+
+          echo "Source manifest version: $SOURCE_VERSION"
+          echo "Built manifest version: $BUILT_VERSION"
+
+          if [ "$BUILT_VERSION" != "$SOURCE_VERSION" ]; then
+            echo "dist/manifest.json version does not match public/manifest.json"
+            exit 1
+          fi
+
       - name: Create ZIP file
         run: |
           cd dist
@@ -49,3 +62,56 @@ jobs:
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get Chrome Web Store access token
+        id: chrome_token
+        run: |
+          RESPONSE=$(curl -s \
+            -d client_id="${{ secrets.CHROME_CLIENT_ID }}" \
+            -d client_secret="${{ secrets.CHROME_CLIENT_SECRET }}" \
+            -d refresh_token="${{ secrets.CHROME_REFRESH_TOKEN }}" \
+            -d grant_type="refresh_token" \
+            https://oauth2.googleapis.com/token)
+
+          ACCESS_TOKEN=$(echo "$RESPONSE" | jq -r '.access_token')
+
+          if [ "$ACCESS_TOKEN" = "null" ] || [ -z "$ACCESS_TOKEN" ]; then
+            echo "Failed to get access token"
+            echo "$RESPONSE"
+            exit 1
+          fi
+
+          echo "ACCESS_TOKEN=$ACCESS_TOKEN" >> $GITHUB_OUTPUT
+
+      - name: Upload ZIP to Chrome Web Store
+        run: |
+          RESPONSE=$(curl -s -X PUT \
+            -H "Authorization: Bearer ${{ steps.chrome_token.outputs.ACCESS_TOKEN }}" \
+            -H "x-goog-api-version: 2" \
+            -T steam-alias-helper-${{ steps.version.outputs.VERSION }}.zip \
+            "https://www.googleapis.com/upload/chromewebstore/v1.1/items/${{ secrets.CHROME_EXTENSION_ID }}")
+
+          echo "$RESPONSE"
+
+          UPLOAD_STATE=$(echo "$RESPONSE" | jq -r '.uploadState')
+
+          if [ "$UPLOAD_STATE" != "SUCCESS" ]; then
+            echo "Chrome Web Store upload failed"
+            exit 1
+          fi
+
+      - name: Publish Chrome Extension
+        run: |
+          RESPONSE=$(curl -s -X POST \
+            -H "Authorization: Bearer ${{ steps.chrome_token.outputs.ACCESS_TOKEN }}" \
+            -H "x-goog-api-version: 2" \
+            "https://www.googleapis.com/chromewebstore/v1.1/items/${{ secrets.CHROME_EXTENSION_ID }}/publish")
+
+          echo "$RESPONSE"
+
+          STATUS=$(echo "$RESPONSE" | jq -r '.status[]?')
+
+          if echo "$RESPONSE" | jq -e '.error' > /dev/null; then
+            echo "Chrome Web Store publish failed"
+            exit 1
+          fi
