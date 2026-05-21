@@ -28,7 +28,26 @@ export class SetNicknameUseCase {
             return await this.handleNotFriend()
         }
 
+        const currentNickname = this.profileDetector.getCurrentNickname()
+        if (currentNickname !== null && currentNickname === alias) {
+            return this.handleAlreadySet(alias)
+        }
+
         return await this.attemptSetNickname(alias)
+    }
+
+    private handleAlreadySet(alias: string): SetAliasResponse {
+        this.overlay.setSub('El alias ya coincide, omitiendo.')
+        this.overlay.appendLog(
+            `El nickname actual ya es "${alias}". Se omite el flujo de menús para acelerar la actualización.`,
+        )
+
+        return {
+            ok: true,
+            code: 'ALREADY_SET',
+            skipped: true,
+            message: 'El alias ya estaba asignado, se omite sin tocar el DOM.',
+        }
     }
 
     private handleOwnProfile(): SetAliasResponse {

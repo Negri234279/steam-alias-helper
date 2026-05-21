@@ -179,10 +179,18 @@ export class BulkAliasUpdateService {
 
     private handleUpdateResponse(response: any, item: Alias, index: number): void {
         if (response?.ok) {
+            let statusLine = `✅ Actualizado: ${item.alias}`
+
+            if (response?.code === 'ALREADY_SET') {
+                statusLine = `⏩ Sin cambios (alias ya asignado): ${item.alias}`
+            } else if (response?.code === 'OWN_PROFILE') {
+                statusLine = `⏩ Tu propio perfil, omitido: ${item.steamId}`
+            }
+
             this.reportProgress({
                 done: index,
                 total: this.currentRun!.total,
-                statusLine: `✅ Actualizado: ${item.alias}`,
+                statusLine,
             })
         } else if (response?.code === 'NOT_FRIEND') {
             if (response?.friendRequestSent) {
