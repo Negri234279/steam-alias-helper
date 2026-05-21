@@ -1,28 +1,30 @@
 import { useEffect, useState } from 'preact/hooks'
+import type { OverlayUI } from '../infrastructure/OverlayUI'
 
 interface OverlayContentProps {
+    overlay: OverlayUI
     onClose: () => void
     onRetry: () => void
 }
 
-export function OverlayContent({ onClose, onRetry }: OverlayContentProps) {
+export function OverlayContent({ overlay, onClose, onRetry }: OverlayContentProps) {
     const [subtitle, setSubtitle] = useState('Listo.')
     const [target, setTarget] = useState('Sin tarea activa')
     const [log, setLog] = useState('Log:\n')
 
     useEffect(() => {
-        ;(window as any).__overlayUI = {
+        overlay.registerSink({
             setSub: setSubtitle,
             setTarget,
             appendLog: (text: string) => {
                 setLog((prev) => prev + (text.endsWith('\n') ? text : text + '\n'))
             },
-        }
+        })
 
         return () => {
-            delete (window as any).__overlayUI
+            overlay.unregisterSink()
         }
-    }, [])
+    }, [overlay])
 
     const handleHelp = () => {
         setLog(

@@ -33,14 +33,11 @@ export class SteamProfileDetector {
     getCurrentNickname(): string | null {
         const span = DomUtils.query<HTMLElement>('span.nickname')
 
-        console.log({ span })
-
         if (!span) return null
 
         const raw = (span.textContent || '').trim()
         if (!raw) return null
 
-        // Steam muestra el alias entre paréntesis, p. ej. "(--Lola)".
         const match = raw.match(/^\((.*)\)$/)
         return (match ? match[1] : raw).trim()
     }
