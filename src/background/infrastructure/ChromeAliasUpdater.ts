@@ -27,7 +27,7 @@ export class ChromeAliasUpdater implements IAliasUpdater {
                     }
                 }
 
-                await this.sleep(250)
+                await this.sleep(150)
             }
         }
     }

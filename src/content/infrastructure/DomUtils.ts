@@ -71,7 +71,7 @@ export class DomUtils {
         el.scrollIntoView({ block: 'center', behavior: 'instant' })
         el.click()
 
-        await new Promise((resolve) => setTimeout(resolve, 250))
+        await new Promise((resolve) => setTimeout(resolve, 150))
 
         return true
     }
