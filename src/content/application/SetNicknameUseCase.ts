@@ -244,7 +244,7 @@ export class SetNicknameUseCase {
 
     private async completeModal(alias: string): Promise<SetAliasResponse> {
         this.overlay.setSub('Esperando modal…')
-        await DomUtils.delay(100)
+        await DomUtils.delay(200)
 
         const modal =
             DomUtils.query('.newmodal') ||
