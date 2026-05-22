@@ -71,9 +71,28 @@ export class DomUtils {
         el.scrollIntoView({ block: 'center', behavior: 'instant' })
         el.click()
 
-        await new Promise((resolve) => setTimeout(resolve, 250))
-
         return true
+    }
+
+    /**
+     * Sondea el DOM hasta que `finder` devuelve un elemento o se agota el tiempo.
+     * Sustituye a los `delay()` fijos: es más rápido cuando el DOM ya está listo
+     * y más robusto cuando Steam tarda en renderizar.
+     */
+    static async waitFor<T extends Element = HTMLElement>(
+        finder: () => T | null,
+        options: { timeout?: number; interval?: number } = {}
+    ): Promise<T | null> {
+        const { timeout = 3000, interval = 50 } = options
+        const started = Date.now()
+
+        let el = finder()
+        while (!el && Date.now() - started < timeout) {
+            await this.delay(interval)
+            el = finder()
+        }
+
+        return el
     }
 
     static async delay(ms: number): Promise<void> {

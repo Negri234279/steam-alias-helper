@@ -11,11 +11,11 @@ export class SteamProfileDetector {
         if (editProfileBtn) return true
 
         const candidates = DomUtils.queryAll<HTMLElement>(
-            "a.btn_profile_action, a, button, [role='button']"
+            "a.btn_profile_action, a, button, [role='button']",
         )
 
         return candidates.some((el) =>
-            /modificar\s+perfil|edit\s+profile/i.test((el.textContent || '').trim())
+            /modificar\s+perfil|edit\s+profile/i.test((el.textContent || '').trim()),
         )
     }
 
@@ -24,12 +24,22 @@ export class SteamProfileDetector {
         if (addFriendBtn) return true
 
         const candidates = DomUtils.queryAll<HTMLElement>(
-            "a.btn_profile_action, a, button, [role='button']"
+            "a.btn_profile_action, a, button, [role='button']",
         )
 
-        return candidates.some((el) =>
-            /añadir\s+como\s+amigo/i.test((el.textContent || '').trim())
-        )
+        return candidates.some((el) => /añadir\s+como\s+amigo/i.test((el.textContent || '').trim()))
+    }
+
+    getCurrentNickname(): string | null {
+        const span = DomUtils.query<HTMLElement>('span.nickname')
+
+        if (!span) return null
+
+        const raw = (span.textContent || '').trim()
+        if (!raw) return null
+
+        const match = raw.match(/^\((.*)\)$/)
+        return (match ? match[1] : raw).trim()
     }
 
     detectProfileState(): ProfileInfo {

@@ -25,5 +25,7 @@ export interface SetAliasResult {
     ok: boolean
     error?: string
     code?: string
+    skipped?: boolean
+    message?: string
     friendRequestSent?: boolean
 }
