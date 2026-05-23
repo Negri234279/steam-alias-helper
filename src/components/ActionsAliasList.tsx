@@ -59,7 +59,7 @@ const ActionsAliasList = ({ aliases, selected, setSelected, upsertAll, onShowRep
         success('Importación completada')
     }
 
-    const handleUpdateAliasesSelected = async () => {
+    const startUpdate = async (mode: 'changed' | 'all') => {
         try {
             const aliasesToUpdate = Array.from(selected.values())
 
@@ -67,6 +67,7 @@ const ActionsAliasList = ({ aliases, selected, setSelected, upsertAll, onShowRep
                 type: 'START_UPDATE',
                 payload: {
                     items: aliasesToUpdate,
+                    mode,
                 },
             })
 
@@ -80,6 +81,9 @@ const ActionsAliasList = ({ aliases, selected, setSelected, upsertAll, onShowRep
             showError(`Error al iniciar actualización: ${msg}`)
         }
     }
+
+    const handleUpdateChanged = () => startUpdate('changed')
+    const handleUpdateForceAll = () => startUpdate('all')
     return (
         <div class="actions">
             {!!aliases.data.length && (
@@ -135,7 +139,7 @@ const ActionsAliasList = ({ aliases, selected, setSelected, upsertAll, onShowRep
 
             {!!aliases.data.length && (
                 <button
-                    id="updateSelectedBtn"
+                    id="updateChangedBtn"
                     style={
                         isDisabled || !selectedCount
                             ? 'pointer-events: none; cursor: default;'
@@ -144,9 +148,28 @@ const ActionsAliasList = ({ aliases, selected, setSelected, upsertAll, onShowRep
                     class="btn primary"
                     type="button"
                     disabled={isDisabled || !selectedCount}
-                    onClick={handleUpdateAliasesSelected}
+                    onClick={handleUpdateChanged}
+                    title="Salta los alias ya aplicados en los últimos 30 días con el mismo nombre"
                 >
-                    Actualizar seleccionados ({selectedCount})
+                    Solo cambiados ({selectedCount})
+                </button>
+            )}
+
+            {!!aliases.data.length && (
+                <button
+                    id="updateForceAllBtn"
+                    style={
+                        isDisabled || !selectedCount
+                            ? 'pointer-events: none; cursor: default;'
+                            : undefined
+                    }
+                    class="btn"
+                    type="button"
+                    disabled={isDisabled || !selectedCount}
+                    onClick={handleUpdateForceAll}
+                    title="Ignora la caché y reprocesa todos los seleccionados"
+                >
+                    Forzar todos ({selectedCount})
                 </button>
             )}
 

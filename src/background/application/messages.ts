@@ -5,7 +5,7 @@ export type MsgSteam =
     | { type: 'ALIAS_UPSERT'; payload: Alias }
     | { type: 'ALIASES_UPSERT'; payload: Alias[] }
     | { type: 'ALIASES_REMOVE'; payload: Pick<Alias, 'steamId'> }
-    | { type: 'START_UPDATE'; payload: { items: Alias[] } }
+    | { type: 'START_UPDATE'; payload: { items: Alias[]; mode?: 'changed' | 'all' } }
     | { type: 'CANCEL_UPDATE'; payload: { runId: string } }
 
 export type ResponseOkSteam = {

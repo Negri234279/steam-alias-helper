@@ -1,5 +1,6 @@
-import type { Alias } from '../../types/alias'
+import type { Alias, AppliedAliasEntry } from '../../types/alias'
 import type { SetAliasResult, UpdateProgress, UpdateRun } from '../domain/models'
+import type { IAppliedAliasRepository } from '../domain/repositories'
 import type {
     IAliasUpdater,
     IDelayProvider,
@@ -7,6 +8,8 @@ import type {
     IRunIdGenerator,
     ITabManager,
 } from '../domain/services'
+
+export type UpdateMode = 'changed' | 'all'
 
 export interface BulkUpdateConfig {
     pageLoadTimeout: number
@@ -32,11 +35,14 @@ const DEFAULT_CONFIG: BulkUpdateConfig = {
 export class BulkAliasUpdateService {
     private currentRun: UpdateRun | null = null
     private adaptiveDelay: number
+    private skippedCount = 0
+    private appliedCache: Map<string, AppliedAliasEntry> = new Map()
     private readonly tabManager: ITabManager
     private readonly aliasUpdater: IAliasUpdater
     private readonly progressReporter: IProgressReporter
     private readonly delayProvider: IDelayProvider
     private readonly runIdGenerator: IRunIdGenerator
+    private readonly appliedAliasRepository: IAppliedAliasRepository
     private readonly config: BulkUpdateConfig
 
     constructor(
@@ -45,6 +51,7 @@ export class BulkAliasUpdateService {
         progressReporter: IProgressReporter,
         delayProvider: IDelayProvider,
         runIdGenerator: IRunIdGenerator,
+        appliedAliasRepository: IAppliedAliasRepository,
         config: BulkUpdateConfig = DEFAULT_CONFIG,
     ) {
         this.tabManager = tabManager
@@ -52,11 +59,15 @@ export class BulkAliasUpdateService {
         this.progressReporter = progressReporter
         this.delayProvider = delayProvider
         this.runIdGenerator = runIdGenerator
+        this.appliedAliasRepository = appliedAliasRepository
         this.config = config
         this.adaptiveDelay = config.delayBetweenUpdates
     }
 
-    async startUpdate(items: Alias[]): Promise<{ runId: string; progress: UpdateProgress }> {
+    async startUpdate(
+        items: Alias[],
+        mode: UpdateMode = 'changed',
+    ): Promise<{ runId: string; progress: UpdateProgress }> {
         if (this.currentRun) {
             throw new Error('Ya hay una actualización en curso')
         }
@@ -64,21 +75,26 @@ export class BulkAliasUpdateService {
         const runId = this.runIdGenerator.generate()
         this.adaptiveDelay = this.config.delayBetweenUpdates
 
+        this.appliedCache = await this.appliedAliasRepository.getValidMap()
+
+        const { toProcess, skipped } = this.partitionItems(items, mode, this.appliedCache)
+        this.skippedCount = skipped.length
+
         this.currentRun = {
             runId,
             cancelled: false,
-            items,
+            items: toProcess,
             total: items.length,
-            done: 0,
+            done: skipped.length,
             tabId: null,
             nonFriends: [],
             friendRequestsSent: [],
         }
 
         const progress: UpdateProgress = {
-            done: 0,
+            done: skipped.length,
             total: items.length,
-            statusLine: 'Iniciado.',
+            statusLine: this.buildStartLine(skipped.length, toProcess.length, mode),
         }
 
         this.executeUpdateQueue(runId).catch((error) => {
@@ -111,16 +127,59 @@ export class BulkAliasUpdateService {
         return this.currentRun
     }
 
+    private partitionItems(
+        items: Alias[],
+        mode: UpdateMode,
+        cache: Map<string, AppliedAliasEntry>,
+    ): { toProcess: Alias[]; skipped: Alias[] } {
+        if (mode === 'all') {
+            return { toProcess: items.slice(), skipped: [] }
+        }
+
+        const toProcess: Alias[] = []
+        const skipped: Alias[] = []
+
+        for (const item of items) {
+            const cached = cache.get(item.steamId)
+            if (cached && cached.alias === item.alias) {
+                skipped.push(item)
+            } else {
+                toProcess.push(item)
+            }
+        }
+
+        return { toProcess, skipped }
+    }
+
+    private buildStartLine(skipped: number, toProcess: number, mode: UpdateMode): string {
+        if (mode === 'all') {
+            return `Forzando actualización de ${toProcess} alias…`
+        }
+        if (skipped === 0) {
+            return `Procesando ${toProcess} alias…`
+        }
+        if (toProcess === 0) {
+            return `⚡ Todos los alias (${skipped}) ya estaban aplicados. Nada que hacer.`
+        }
+        return `⚡ Saltados ${skipped} ya aplicados (cache 30d). Procesando ${toProcess} nuevos…`
+    }
+
     private async executeUpdateQueue(runId: string): Promise<void> {
         if (!this.currentRun) {
             throw new Error('No hay una actualización en curso')
         }
 
         this.reportProgress({
-            done: 0,
+            done: this.currentRun.done,
             total: this.currentRun.total,
-            statusLine: 'Preparando…',
+            statusLine:
+                this.currentRun.items.length === 0 ? '⚡ Sin alias por procesar.' : 'Preparando…',
         })
+
+        if (this.currentRun.items.length === 0) {
+            this.finishUpdate(false)
+            return
+        }
 
         const tabId = await this.ensureValidTab()
 
@@ -131,7 +190,7 @@ export class BulkAliasUpdateService {
             }
 
             const item = this.currentRun.items[i]
-            this.currentRun.done = i
+            this.currentRun.done = this.skippedCount + i
 
             const response = await this.processItem(item, i, tabId)
 
@@ -139,11 +198,12 @@ export class BulkAliasUpdateService {
             // sentido seguir gastando intentos en el resto del lote.
             if (response?.code === 'RATE_LIMITED') {
                 const total = this.currentRun!.total
+                const processed = this.skippedCount + i
                 this.finishUpdate(false, {
-                    done: i,
+                    done: processed,
                     statusLine:
-                        `⛔ Steam ha limitado la cuenta tras procesar ${i} de ${total} alias. ` +
-                        `Espera unos minutos y reanuda con los ${total - i} restantes.`,
+                        `⛔ Steam ha limitado la cuenta tras procesar ${processed} de ${total} alias. ` +
+                        `Espera unos minutos y reanuda con los ${total - processed} restantes.`,
                 })
                 return
             }
@@ -162,11 +222,13 @@ export class BulkAliasUpdateService {
         tabId: number,
     ): Promise<SetAliasResult | null> {
         const url = `https://steamcommunity.com/profiles/${item.steamId}/`
+        const total = this.currentRun!.total
+        const displayDone = this.skippedCount + index
 
         this.reportProgress({
-            done: index,
-            total: this.currentRun!.total,
-            statusLine: `Procesando ${index + 1} de ${this.currentRun!.total}: ${item.alias || item.steamId}`,
+            done: displayDone,
+            total,
+            statusLine: `Procesando ${displayDone + 1} de ${total}: ${item.alias || item.steamId}`,
             currentLabel: item.alias || item.steamId,
         })
 
@@ -181,8 +243,8 @@ export class BulkAliasUpdateService {
             if (this.currentRun?.cancelled) return null
 
             this.reportProgress({
-                done: index,
-                total: this.currentRun!.total,
+                done: displayDone,
+                total,
                 statusLine:
                     attempt === 0
                         ? `Intentando actualizar nickname: "${item.alias || item.steamId}"…`
@@ -206,8 +268,8 @@ export class BulkAliasUpdateService {
             if (attempt < this.config.maxRateLimitRetries) {
                 const backoff = this.config.rateLimitBackoff * (attempt + 1)
                 this.reportProgress({
-                    done: index,
-                    total: this.currentRun!.total,
+                    done: displayDone,
+                    total,
                     statusLine: `⏳ Steam limitó la petición. Esperando ${Math.round(backoff / 1000)}s antes de reintentar…`,
                 })
                 await this.delayProvider.wait(backoff)
@@ -215,8 +277,29 @@ export class BulkAliasUpdateService {
         }
 
         this.handleUpdateResponse(response, item, index)
+        this.updateCacheForResponse(response, item)
 
         return response
+    }
+
+    private updateCacheForResponse(response: SetAliasResult | null, item: Alias): void {
+        if (!response) return
+
+        // OWN_PROFILE no depende del alias enviado, no tiene sentido cachearlo.
+        if (response.code === 'OWN_PROFILE') return
+
+        if (response.ok) {
+            this.appliedCache.set(item.steamId, {
+                steamId: item.steamId,
+                alias: item.alias,
+                appliedAt: Date.now(),
+            })
+            return
+        }
+
+        if (response.code === 'NOT_FRIEND' || response.code === 'RATE_LIMITED') {
+            this.appliedCache.delete(item.steamId)
+        }
     }
 
     private async loadProfile(tabId: number, url: string, index: number): Promise<boolean> {
@@ -228,7 +311,7 @@ export class BulkAliasUpdateService {
         } catch (error) {
             const msg = error instanceof Error ? error.message : String(error)
             this.reportProgress({
-                done: index,
+                done: this.skippedCount + index,
                 total: this.currentRun!.total,
                 statusLine: `❌ Error cargando perfil: ${msg}`,
             })
@@ -247,6 +330,9 @@ export class BulkAliasUpdateService {
     }
 
     private handleUpdateResponse(response: any, item: Alias, index: number): void {
+        const total = this.currentRun!.total
+        const displayDone = this.skippedCount + index
+
         if (response?.ok) {
             let statusLine = `✅ Actualizado: ${item.alias}`
 
@@ -257,8 +343,8 @@ export class BulkAliasUpdateService {
             }
 
             this.reportProgress({
-                done: index,
-                total: this.currentRun!.total,
+                done: displayDone,
+                total,
                 statusLine,
             })
         } else if (response?.code === 'NOT_FRIEND') {
@@ -276,20 +362,20 @@ export class BulkAliasUpdateService {
                 : `🚫 No es tu amigo: ${item.alias} (${item.steamId})`
 
             this.reportProgress({
-                done: index,
-                total: this.currentRun!.total,
+                done: displayDone,
+                total,
                 statusLine,
             })
         } else if (response?.code === 'RATE_LIMITED') {
             this.reportProgress({
-                done: index,
-                total: this.currentRun!.total,
+                done: displayDone,
+                total,
                 statusLine: `⛔ Steam sigue limitando «${item.alias}» tras ${this.config.maxRateLimitRetries} reintentos. Inténtalo de nuevo más tarde.`,
             })
         } else {
             this.reportProgress({
-                done: index,
-                total: this.currentRun!.total,
+                done: displayDone,
+                total,
                 statusLine: `⚠️ No se pudo automatizar. Revisa el overlay en Steam. (${response?.error || 'sin detalle'})`,
             })
         }
@@ -336,9 +422,16 @@ export class BulkAliasUpdateService {
             this.persistFriendRequestsSent(friendRequestsSent)
         }
 
-        const statusLine =
+        this.persistAppliedCache()
+
+        const baseStatusLine =
             override?.statusLine ??
             (wasCancelled ? 'Actualización cancelada.' : 'Actualización completada.')
+
+        const statusLine =
+            this.skippedCount > 0 && !override?.statusLine
+                ? `${baseStatusLine} ⚡ Saltados ${this.skippedCount} por cache.`
+                : baseStatusLine
 
         this.reportProgress({
             done: this.currentRun.done,
@@ -350,6 +443,15 @@ export class BulkAliasUpdateService {
         })
 
         this.currentRun = null
+        this.skippedCount = 0
+    }
+
+    private persistAppliedCache(): void {
+        const entries = Array.from(this.appliedCache.values())
+        this.appliedAliasRepository.save(entries).catch((error) => {
+            const msg = error instanceof Error ? error.message : String(error)
+            console.error('[BulkAliasUpdateService] Error guardando cache de alias aplicados:', msg)
+        })
     }
 
     private persistFriendRequestsSent(newEntries: Alias[]): void {
