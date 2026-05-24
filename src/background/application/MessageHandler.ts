@@ -1,17 +1,13 @@
 import type { Alias } from '../../types/alias'
 import type { IAliasRepository } from '../domain/repositories'
-import type { BulkAliasUpdateService } from './BulkAliasUpdateService'
+import type { BulkAliasUpdateService, UpdateMode } from './BulkAliasUpdateService'
 import type { MsgSteam, ResponseSteam } from './messages'
-
 
 export class MessageHandler {
     private readonly aliasRepository: IAliasRepository
     private readonly bulkUpdateService: BulkAliasUpdateService
 
-    constructor(
-        aliasRepository: IAliasRepository,
-        bulkUpdateService: BulkAliasUpdateService
-    ) {
+    constructor(aliasRepository: IAliasRepository, bulkUpdateService: BulkAliasUpdateService) {
         this.aliasRepository = aliasRepository
         this.bulkUpdateService = bulkUpdateService
     }
@@ -32,17 +28,23 @@ export class MessageHandler {
                     return await this.handleRemoveAlias(message.payload.steamId)
 
                 case 'START_UPDATE':
-                    return await this.handleStartUpdate(message.payload.items)
+                    return await this.handleStartUpdate(message.payload.items, message.payload.mode)
 
                 case 'CANCEL_UPDATE':
                     return this.handleCancelUpdate(message.payload.runId)
 
                 default:
-                    return { ok: false, error: 'Mensaje desconocido' }
+                    return {
+                        ok: false,
+                        error: 'Mensaje desconocido',
+                    }
             }
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error)
-            return { ok: false, error: errorMessage }
+            return {
+                ok: false,
+                error: errorMessage,
+            }
         }
     }
 
@@ -66,8 +68,8 @@ export class MessageHandler {
         return { ok: true, data: aliases }
     }
 
-    private async handleStartUpdate(items: Alias[]): Promise<ResponseSteam> {
-        const { runId, progress } = await this.bulkUpdateService.startUpdate(items)
+    private async handleStartUpdate(items: Alias[], mode?: UpdateMode): Promise<ResponseSteam> {
+        const { runId, progress } = await this.bulkUpdateService.startUpdate(items, mode)
         return { ok: true, runId, progress }
     }
 

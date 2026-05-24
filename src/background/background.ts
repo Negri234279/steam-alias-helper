@@ -2,6 +2,7 @@ import type { MsgSteam, ResponseSteam } from './application/messages'
 import { MessageHandler } from './application/MessageHandler'
 import { BulkAliasUpdateService } from './application/BulkAliasUpdateService'
 import { ChromeStorageAliasRepository } from './infrastructure/ChromeStorageAliasRepository'
+import { ChromeStorageAppliedAliasRepository } from './infrastructure/ChromeStorageAppliedAliasRepository'
 import { ChromeTabManager } from './infrastructure/ChromeTabManager'
 import { ChromeAliasUpdater } from './infrastructure/ChromeAliasUpdater'
 import { ChromeRuntimeProgressReporter } from './infrastructure/ChromeRuntimeProgressReporter'
@@ -11,6 +12,7 @@ export type { MsgSteam, ResponseSteam } from './application/messages'
 
 function setupDependencies() {
     const aliasRepository = new ChromeStorageAliasRepository()
+    const appliedAliasRepository = new ChromeStorageAppliedAliasRepository()
     const tabManager = new ChromeTabManager()
     const aliasUpdater = new ChromeAliasUpdater()
     const progressReporter = new ChromeRuntimeProgressReporter()
@@ -22,7 +24,8 @@ function setupDependencies() {
         aliasUpdater,
         progressReporter,
         delayProvider,
-        runIdGenerator
+        runIdGenerator,
+        appliedAliasRepository,
     )
 
     const messageHandler = new MessageHandler(aliasRepository, bulkUpdateService)

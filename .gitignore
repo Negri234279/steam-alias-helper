@@ -25,3 +25,5 @@ dist-ssr
 
 steam-alias-list.json
 *.zip
+
+settings.local.json
